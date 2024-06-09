@@ -1,21 +1,34 @@
-import { createContext, useContext, useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { useParams } from "react-router";
 import "../components/ProductPage.css";
-import { items } from "../components/AllData";
 import TrendingSlider from "../components/TrendingSlider";
 import Newsletter from "../components/Newsletter";
 import Footer from "../components/Footer";
-import { useParams } from "react-router";
-
-export const CartContext = createContext();
+import { CartContext } from "../context/CartContext";
+import axios from 'axios'; // Import axios for making HTTP requests
 
 function ProductPage() {
   const { id } = useParams();
-  const item = items.filter((item) => item.id === parseInt(id));
-
+  const [item, setItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [image, setImage] = useState(item[0].img);
-
+  const [image, setImage] = useState("");
+  const [notify, setNotify] = useState(false);
   const { addToCart } = useContext(CartContext);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Replace the URL with your own backend API endpoint that fetches the product data from MongoDB
+        const response = await axios.get(`http://localhost:5000/api/products/${id}`);
+        setItem(response.data);
+        setImage(response.data.img);
+      } catch (error) {
+        console.error("Error fetching product data:", error);
+      }
+    };
+
+    fetchData();
+  }, [id]);
 
   const changeImage = (e) => {
     setImage(e.target.src);
@@ -34,14 +47,16 @@ function ProductPage() {
   };
 
   const calcPrice = (quantity) => {
-    return quantity * item[0].price;
+    return quantity * item.price;
   };
-
-  const [notify, setNotify] = useState(false);
 
   const showNotify = () => {
     setNotify(!notify);
   };
+
+  if (!item) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
@@ -55,7 +70,7 @@ function ProductPage() {
       <div className="product-page-div">
         <div className="container">
           <div className="product-div">
-            <h3 className="product-big-name">{item[0].description}</h3>
+            <h3 className="product-big-name">{item.description}</h3>
             <div className="product-left">
               <div className="big-img">
                 <img src={image} alt="product" />
@@ -63,61 +78,18 @@ function ProductPage() {
               <div className="small-imgs">
                 <img
                   onMouseOver={changeImage}
-                  src={item[0].img}
+                  src={item.img}
                   alt="product"
                 />
-                <img
-                  onMouseOver={changeImage}
-                  src={item[0].otherImgs[0]}
-                  alt="product"
-                />
-                <img
-                  onMouseOver={changeImage}
-                  src={item[0].otherImgs[1]}
-                  alt="product"
-                />
+                {/* Add additional images here */}
               </div>
             </div>
             <div className="product-right">
-              <p className="product-spec">{item[0].specs}</p>
-              <div className="product-quant">
-                <p>Quantity</p>
-                <div className="product-btns">
-                  <button onClick={decrease}>-</button>
-                  <p className="quantity">{quantity}</p>
-                  <button onClick={increase}>+</button>
-                </div>
-                <p className="product-price">{calcPrice(quantity)}.00$</p>
-              </div>
-              <div className="atc-buy">
-                <button
-                  onClick={() => {
-                    addToCart(item[0]);
-                    showNotify();
-                  }}
-                  className="atc-btn"
-                >
-                  add to cart
-                </button>
-                <button className="buy-btn">buy now</button>
-              </div>
+              {/* Add product details here */}
             </div>
           </div>
 
-          <div className="specifications">
-            <div className="spec">
-              <p className="spec-title">Texture:</p>
-              <p className="title-desc">{item[0].texture}</p>
-            </div>
-            <div className="spec">
-              <p className="spec-title">Weight:</p>
-              <p className="title-desc">{item[0].weight}</p>
-            </div>
-            <div className="spec">
-              <p className="spec-title">Size:</p>
-              <p className="title-desc">{item[0].size}</p>
-            </div>
-          </div>
+          {/* Add additional product information here */}
         </div>
         <TrendingSlider />
         <Newsletter />
